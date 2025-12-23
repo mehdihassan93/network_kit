@@ -11,7 +11,9 @@ class SyncManager {
   SyncManager(this.client, {OfflineStorage? storage}) 
       : storage = storage ?? OfflineStorage();
 
+  /// The network client used for replaying requests.
   final NetworkClient client;
+  /// The storage mechanism for the offline queue.
   final OfflineStorage storage;
 
   StreamSubscription<List<ConnectivityResult>>? _subscription;

@@ -15,10 +15,15 @@ dynamic _parseJson(String text) {
 
 /// HTTP methods supported by the client.
 enum HttpMethod {
+  /// HTTP GET request.
   get,
+  /// HTTP POST request.
   post,
+  /// HTTP PUT request.
   put,
+  /// HTTP PATCH request.
   patch,
+  /// HTTP DELETE request.
   delete,
 }
 

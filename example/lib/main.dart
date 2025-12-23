@@ -8,6 +8,7 @@ void main() async {
 
 /// A demonstration app for the Network Kit.
 class MyApp extends StatefulWidget {
+  /// The constructor for the [MyApp] widget.
   const MyApp({super.key});
 
   @override

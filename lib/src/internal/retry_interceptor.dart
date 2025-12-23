@@ -9,8 +9,11 @@ class RetryInterceptor extends Interceptor {
     this.delays = const [1000, 2000, 4000],
   });
 
+  /// The Dio instance used to re-execute the request.
   final Dio dio;
+  /// Maximum number of retry attempts.
   final int maxRetries;
+  /// Delays between retry attempts.
   final List<int> delays;
 
   static const String _retryCountKey = 'network_kit_retry_count';

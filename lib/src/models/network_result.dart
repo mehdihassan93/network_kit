@@ -6,6 +6,7 @@ sealed class NetworkResult<T> {
 
 /// Returned when a request completes successfully.
 class Success<T> extends NetworkResult<T> {
+  /// Creates a success result with the given [data].
   const Success(this.data);
 
   /// The response payload.
@@ -14,6 +15,7 @@ class Success<T> extends NetworkResult<T> {
 
 /// Returned when a request fails due to an error or loss of connectivity.
 class Failure<T> extends NetworkResult<T> {
+  /// Creates a failure result with a [message] and optional [statusCode].
   const Failure(this.message, {this.statusCode});
 
   /// The descriptive error message.

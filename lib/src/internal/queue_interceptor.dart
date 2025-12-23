@@ -12,7 +12,9 @@ class QueueInterceptor extends Interceptor {
     Connectivity? connectivity,
   }) : connectivity = connectivity ?? Connectivity();
 
+  /// Persistent storage for the offline queue.
   final OfflineStorage storage;
+  /// Connectivity monitor for detecting network status.
   final Connectivity connectivity;
 
   @override
