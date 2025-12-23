@@ -30,11 +30,11 @@ void main() {
       );
 
       when(() => mockDio.request<dynamic>(
-        any(),
-        data: any(named: 'data'),
-        queryParameters: any(named: 'queryParameters'),
-        cancelToken: any(named: 'cancelToken'),
-        options: any(named: 'options'),
+        any<String>(),
+        data: any<dynamic>(named: 'data'),
+        queryParameters: any<Map<String, dynamic>?>(named: 'queryParameters'),
+        cancelToken: any<CancelToken?>(named: 'cancelToken'),
+        options: any<Options?>(named: 'options'),
       )).thenAnswer((_) async => response);
 
       final result = await client.request<Map<dynamic, dynamic>>(
@@ -48,11 +48,11 @@ void main() {
 
     test('should return Failure when server returns 500 Error', () async {
       when(() => mockDio.request<dynamic>(
-        any(),
-        data: any(named: 'data'),
-        queryParameters: any(named: 'queryParameters'),
-        cancelToken: any(named: 'cancelToken'),
-        options: any(named: 'options'),
+        any<String>(),
+        data: any<dynamic>(named: 'data'),
+        queryParameters: any<Map<String, dynamic>?>(named: 'queryParameters'),
+        cancelToken: any<CancelToken?>(named: 'cancelToken'),
+        options: any<Options?>(named: 'options'),
       )).thenThrow(DioException(
         requestOptions: RequestOptions(path: '/test'),
         type: DioExceptionType.badResponse,
@@ -73,11 +73,11 @@ void main() {
 
     test('should return Failure message on connection timeout', () async {
       when(() => mockDio.request<dynamic>(
-        any(),
-        data: any(named: 'data'),
-        queryParameters: any(named: 'queryParameters'),
-        cancelToken: any(named: 'cancelToken'),
-        options: any(named: 'options'),
+        any<String>(),
+        data: any<dynamic>(named: 'data'),
+        queryParameters: any<Map<String, dynamic>?>(named: 'queryParameters'),
+        cancelToken: any<CancelToken?>(named: 'cancelToken'),
+        options: any<Options?>(named: 'options'),
       )).thenThrow(DioException(
         requestOptions: RequestOptions(path: '/test'),
         type: DioExceptionType.connectionTimeout,

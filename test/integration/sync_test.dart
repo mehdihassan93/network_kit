@@ -37,11 +37,11 @@ void main() {
     test('Full sync loop: capture offline request and replay once back online', () async {
       // 1. Force a connection error to trigger queuing.
       when(() => mockDio.request<dynamic>(
-            any(),
-            data: any(named: 'data'),
-            queryParameters: any(named: 'queryParameters'),
-            cancelToken: any(named: 'cancelToken'),
-            options: any(named: 'options'),
+            any<String>(),
+            data: any<dynamic>(named: 'data'),
+            queryParameters: any<Map<String, dynamic>?>(named: 'queryParameters'),
+            cancelToken: any<CancelToken?>(named: 'cancelToken'),
+            options: any<Options?>(named: 'options'),
           )).thenThrow(DioException(
         requestOptions: RequestOptions(path: '/post'),
         error: const SocketException('No Internet'),
@@ -65,11 +65,11 @@ void main() {
 
       // 4. Mock server recovery for the replay attempt.
       when(() => mockDio.request<dynamic>(
-            any(),
-            data: any(named: 'data'),
-            queryParameters: any(named: 'queryParameters'),
-            cancelToken: any(named: 'cancelToken'),
-            options: any(named: 'options'),
+            any<String>(),
+            data: any<dynamic>(named: 'data'),
+            queryParameters: any<Map<String, dynamic>?>(named: 'queryParameters'),
+            cancelToken: any<CancelToken?>(named: 'cancelToken'),
+            options: any<Options?>(named: 'options'),
           )).thenAnswer((_) async => Response<dynamic>(
             requestOptions: RequestOptions(path: '/post'),
             statusCode: 200,

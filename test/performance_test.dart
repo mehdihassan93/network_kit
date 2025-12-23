@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:network_kit/network_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'mocks.dart';
 
 class MockNetworkClient extends Mock implements NetworkClient {}
 
@@ -90,12 +91,12 @@ void main() {
       }
 
       when(() => mockClient.request<dynamic>(
-        path: any(named: 'path'),
-        method: any(named: 'method'),
-        data: any(named: 'data'),
-        queryParameters: any(named: 'queryParameters'),
-        options: any(named: 'options'),
-        cancelToken: any(named: 'cancelToken'),
+        path: any<String>(named: 'path'),
+        method: any<HttpMethod>(named: 'method'),
+        data: any<dynamic>(named: 'data'),
+        queryParameters: any<Map<String, dynamic>?>(named: 'queryParameters'),
+        options: any<Options?>(named: 'options'),
+        cancelToken: any<CancelToken?>(named: 'cancelToken'),
       )).thenAnswer((_) async => const Success<dynamic>({'status': 'ok'}));
 
       final watch = Stopwatch()..start();
