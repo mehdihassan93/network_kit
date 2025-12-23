@@ -1,0 +1,73 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+.idea/
+.vscode/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .packages file is deprecated.
+# Search for it to see if it's still needed in your project.
+.packages
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Web related
+build/
+node_modules/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will regenerate this file with local settings.
+local.properties
+
+# Flutter auto-generated
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/Flutter.podspec
+ios/Flutter/App.framework
+ios/Flutter/App.framework/
+ios/Flutter/App.framework.dSYM
+ios/Flutter/App.framework.dSYM/
+ios/Scaffold/Flutter.framework
+ios/Scaffold/Flutter.framework/
+ios/Scaffold/Flutter.podspec
+
+# macOS auto-generated
+macos/Flutter/ephemeral/
+
+# Linux auto-generated
+linux/flutter/ephemeral/
+
+# Windows auto-generated
+windows/flutter/ephemeral/
+
+# Visual Studio Code related
+.vscode/
+
+# Coverage
+coverage/
+**/lcov.info
