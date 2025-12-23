@@ -8,6 +8,10 @@ import '../models/network_result.dart';
 /// **SyncManager** is the engine responsible for replaying requests that were 
 /// failed and queued while the device was offline.
 class SyncManager {
+  /// Creates a [SyncManager].
+  SyncManager(this.client, {OfflineStorage? storage}) 
+      : storage = storage ?? OfflineStorage();
+
   /// The [NetworkClient] used to re-execute the requests.
   final NetworkClient client;
   
@@ -16,10 +20,6 @@ class SyncManager {
 
   /// Subscription to track connectivity status changes.
   StreamSubscription<List<ConnectivityResult>>? _subscription;
-
-  /// Creates a [SyncManager].
-  SyncManager(this.client, {OfflineStorage? storage}) 
-      : storage = storage ?? OfflineStorage();
 
   /// Starts monitoring connectivity status to automatically trigger sync.
   void startMonitoring() {
@@ -57,14 +57,14 @@ class SyncManager {
         final Map<String, dynamic> requestMap = jsonDecode(jsonRequest) as Map<String, dynamic>;
         
         // 3. Replay the request
-        final result = await client.request(
+        final result = await client.request<dynamic>(
           path: requestMap['path'] as String,
           method: _parseMethod(requestMap['method'] as String),
           data: requestMap['data'],
           queryParameters: (requestMap['queryParameters'] as Map?)?.cast<String, dynamic>(),
         );
 
-        if (result is Success) {
+        if (result is Success<dynamic>) {
           // 4. Update memory state
           memoryQueue.remove(jsonRequest);
           processedCount++;

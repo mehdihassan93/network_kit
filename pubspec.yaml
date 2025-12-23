@@ -1,14 +1,17 @@
 name: network_kit
-description: A lightweight, dependency-free wrapper around Dio for unified error handling and offline support.
+description: A high-performance, resilient networking engine for Flutter. Features background JSON parsing, automated offline queuing, and order-preserving synchronization.
 version: 0.0.1
-repository: https://github.com/yourusername/network_kit
-issue_tracker: https://github.com/yourusername/network_kit/issues
-publish_to: 'none' # Temporary until ready
+homepage: https://github.com/mehdihassan93/network_kit
+repository: https://github.com/mehdihassan93/network_kit
+issue_tracker: https://github.com/mehdihassan93/network_kit/issues
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
 
 dependencies:
+  flutter:
+    sdk: flutter
   dio: ^5.7.0
   connectivity_plus: ^6.0.0
   shared_preferences: ^2.3.0
@@ -21,3 +24,5 @@ dev_dependencies:
     sdk: flutter
   mocktail: ^1.0.4
   plugin_platform_interface: ^2.1.0
+
+# No assets needed in code

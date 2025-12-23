@@ -11,8 +11,8 @@ void main() {
 
     setUp(() {
       mockDio = MockDio();
-      // Setup default transformer mock for NetworkClient constructor
-      when(() => mockDio.transformer).thenReturn(DefaultTransformer());
+      // Setup background transformer mock for NetworkClient constructor
+      when(() => mockDio.transformer).thenReturn(BackgroundTransformer());
       when(() => mockDio.interceptors).thenReturn(Interceptors());
       
       client = NetworkClient(
@@ -22,13 +22,13 @@ void main() {
     });
 
     test('Mock a 200 OK response. Verify it returns Success', () async {
-      final response = Response(
+      final response = Response<dynamic>(
         requestOptions: RequestOptions(path: '/test'),
         data: {'id': 1},
         statusCode: 200,
       );
 
-      when(() => mockDio.request(
+      when(() => mockDio.request<dynamic>(
         any(),
         data: any(named: 'data'),
         queryParameters: any(named: 'queryParameters'),
@@ -36,17 +36,17 @@ void main() {
         options: any(named: 'options'),
       )).thenAnswer((_) async => response);
 
-      final result = await client.request<Map>(
+      final result = await client.request<Map<dynamic, dynamic>>(
         path: '/test',
         method: HttpMethod.get,
       );
 
-      expect(result, isA<Success>());
-      expect((result as Success).data['id'], 1);
+      expect(result, isA<Success<Map<dynamic, dynamic>>>());
+      expect((result as Success<Map<dynamic, dynamic>>).data['id'], 1);
     });
 
     test('Mock a 500 Server Error. Verify it returns Failure', () async {
-      when(() => mockDio.request(
+      when(() => mockDio.request<dynamic>(
         any(),
         data: any(named: 'data'),
         queryParameters: any(named: 'queryParameters'),
@@ -55,23 +55,23 @@ void main() {
       )).thenThrow(DioException(
         requestOptions: RequestOptions(path: '/test'),
         type: DioExceptionType.badResponse,
-        response: Response(
+        response: Response<dynamic>(
           requestOptions: RequestOptions(path: '/test'),
           statusCode: 500,
         ),
       ));
 
-      final result = await client.request(
+      final result = await client.request<dynamic>(
         path: '/test',
         method: HttpMethod.get,
       );
 
-      expect(result, isA<Failure>());
-      expect((result as Failure).statusCode, 500);
+      expect(result, isA<Failure<dynamic>>());
+      expect((result as Failure<dynamic>).statusCode, 500);
     });
 
     test('Mock a connectionTimeout. Verify it returns Failure message', () async {
-      when(() => mockDio.request(
+      when(() => mockDio.request<dynamic>(
         any(),
         data: any(named: 'data'),
         queryParameters: any(named: 'queryParameters'),
@@ -82,13 +82,13 @@ void main() {
         type: DioExceptionType.connectionTimeout,
       ));
 
-      final result = await client.request(
+      final result = await client.request<dynamic>(
         path: '/test',
         method: HttpMethod.get,
       );
 
-      expect(result, isA<Failure>());
-      expect((result as Failure).message, contains('Connection timed out'));
+      expect(result, isA<Failure<dynamic>>());
+      expect((result as Failure<dynamic>).message, contains('Connection timed out'));
     });
   });
 }

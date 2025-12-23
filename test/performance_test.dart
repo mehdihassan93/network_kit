@@ -49,8 +49,8 @@ void main() {
       print('Time to queue 1,000 requests: ${watch.elapsedMilliseconds}ms');
       print('Queue size in memory: ${queue.length} items');
       
-      // Rough memory estimate: 1000 items * 500 bytes = 500KB in SharedPreferences cache
-      expect(queue.length, 1000);
+      // Since we updated OfflineStorage to cap at 200, the result should be 200
+      expect(queue.length, 200);
     });
 
     test('CPU Stress: Large JSON Parsing (5MB)', () async {
@@ -78,13 +78,13 @@ void main() {
         print('⚠️ WARNING: 5MB JSON decoding took > 16ms. This will block the UI thread.');
       }
       
-      expect(decoded, isA<Map>());
+      expect(decoded, isA<Map<dynamic, dynamic>>());
     });
 
     test('Throughput: Syncing 1,000 Requests (O(n2) Risk)', () async {
       print('\n--- Throughput Stress Test ---');
       
-      // Pre-fill storage with 1,000 requests
+      // Pre-fill storage with 1,000 requests (it will cap at 200)
       final jsonPayload = jsonEncode({
         'path': '/api/test',
         'method': 'post',
@@ -95,24 +95,24 @@ void main() {
       }
 
       // Mock Success for all replays
-      when(() => mockClient.request(
+      when(() => mockClient.request<dynamic>(
         path: any(named: 'path'),
         method: any(named: 'method'),
         data: any(named: 'data'),
         queryParameters: any(named: 'queryParameters'),
-      )).thenAnswer((_) async => const Success({'status': 'ok'}));
+      )).thenAnswer((_) async => const Success<dynamic>({'status': 'ok'}));
 
       final watch = Stopwatch()..start();
       await syncManager.startSync();
       watch.stop();
 
-      print('Total Sync time for 1,000 items: ${watch.elapsedMilliseconds}ms');
-      print('Average time per item: ${watch.elapsedMilliseconds / 1000}ms');
+      print('Total Sync time for 200 items (capped): ${watch.elapsedMilliseconds}ms');
+      print('Average time per item: ${watch.elapsedMilliseconds / 200}ms');
       
       final queue = await storage.getQueue();
       expect(queue.length, 0);
 
-      if (watch.elapsedMilliseconds > 2000) {
+      if (watch.elapsedMilliseconds > 1000) {
         print('⚠️ CRITICAL PERF RISK: Sync is O(n2). Re-writing disk for every item is too slow.');
       }
     });

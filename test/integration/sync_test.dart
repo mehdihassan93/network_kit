@@ -20,7 +20,7 @@ void main() {
       storage = OfflineStorage();
       mockDio = MockDio();
       
-      when(() => mockDio.transformer).thenReturn(DefaultTransformer());
+      when(() => mockDio.transformer).thenReturn(BackgroundTransformer());
       final interceptors = Interceptors();
       when(() => mockDio.interceptors).thenReturn(interceptors);
 
@@ -35,7 +35,7 @@ void main() {
 
     test('Full Loop: Offline -> Request Queue -> Online -> Sync', () async {
       // 1. Simulate Offline State via SocketException
-      when(() => mockDio.request(
+      when(() => mockDio.request<dynamic>(
             any(),
             data: any(named: 'data'),
             queryParameters: any(named: 'queryParameters'),
@@ -48,28 +48,28 @@ void main() {
       ));
 
       // 2. Call request()
-      final result = await client.request(
+      final result = await client.request<dynamic>(
         path: '/post',
         method: HttpMethod.post,
         data: {'title': 'hello'},
       );
 
       // 3. Verify it returns Status 499 and item is stored
-      expect(result, isA<Failure>());
-      expect((result as Failure).statusCode, 499);
+      expect(result, isA<Failure<dynamic>>());
+      expect((result as Failure<dynamic>).statusCode, 499);
       
       final queue = await storage.getQueue();
       expect(queue.length, 1);
       expect(queue.first, contains('/post'));
 
       // 4. Mock Success for Replay
-      when(() => mockDio.request(
+      when(() => mockDio.request<dynamic>(
             any(),
             data: any(named: 'data'),
             queryParameters: any(named: 'queryParameters'),
             cancelToken: any(named: 'cancelToken'),
             options: any(named: 'options'),
-          )).thenAnswer((_) async => Response(
+          )).thenAnswer((_) async => Response<dynamic>(
             requestOptions: RequestOptions(path: '/post'),
             statusCode: 200,
             data: {'id': 1},

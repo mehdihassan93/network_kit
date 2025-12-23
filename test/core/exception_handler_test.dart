@@ -11,27 +11,27 @@ void main() {
         type: DioExceptionType.connectionTimeout,
       );
 
-      final result = ExceptionHandler.handleException(dioError);
+      final result = ExceptionHandler.handleException<dynamic>(dioError);
 
-      expect(result, isA<Failure>());
-      expect((result as Failure).message, 'Connection timed out');
+      expect(result, isA<Failure<dynamic>>());
+      expect((result as Failure<dynamic>).message, 'Connection timed out');
     });
 
     test('should extract message from server response on badResponse', () {
       final dioError = DioException(
         requestOptions: RequestOptions(path: ''),
         type: DioExceptionType.badResponse,
-        response: Response(
+        response: Response<dynamic>(
           requestOptions: RequestOptions(path: ''),
           statusCode: 400,
           data: {'message': 'Invalid credentials'},
         ),
       );
 
-      final result = ExceptionHandler.handleException(dioError);
+      final result = ExceptionHandler.handleException<dynamic>(dioError);
 
-      expect(result, isA<Failure>());
-      final failure = result as Failure;
+      expect(result, isA<Failure<dynamic>>());
+      final failure = result as Failure<dynamic>;
       expect(failure.message, 'Invalid credentials');
       expect(failure.statusCode, 400);
     });
@@ -39,10 +39,10 @@ void main() {
     test('should return "Unexpected Error" for non-Dio errors', () {
       final error = Exception('Some random error');
 
-      final result = ExceptionHandler.handleException(error);
+      final result = ExceptionHandler.handleException<dynamic>(error);
 
-      expect(result, isA<Failure>());
-      expect((result as Failure).message, 'Unexpected Error');
+      expect(result, isA<Failure<dynamic>>());
+      expect((result as Failure<dynamic>).message, 'Unexpected Error');
     });
   });
 }

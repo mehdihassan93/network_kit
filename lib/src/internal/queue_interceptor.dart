@@ -9,17 +9,17 @@ import 'offline_storage.dart';
 /// It intercepts connectivity errors and instead of letting the app crash or show 
 /// an error screen, it saves the request metadata to [OfflineStorage].
 class QueueInterceptor extends Interceptor {
-  /// The vault where pending requests are saved.
-  final OfflineStorage storage;
-  
-  /// Helper to check if the device reports "No Internet".
-  final Connectivity connectivity;
-
   /// Creates a [QueueInterceptor].
   QueueInterceptor({
     required this.storage,
     Connectivity? connectivity,
   }) : connectivity = connectivity ?? Connectivity();
+
+  /// The vault where pending requests are saved.
+  final OfflineStorage storage;
+  
+  /// Helper to check if the device reports "No Internet".
+  final Connectivity connectivity;
 
   @override
   Future<void> onError(
@@ -52,7 +52,7 @@ class QueueInterceptor extends Interceptor {
         // 5. Resolve: Return a fake "Success" response with status 499.
         // This tells the UI: "The system has taken care of this request offline."
         return handler.resolve(
-          Response(
+          Response<dynamic>(
             requestOptions: err.requestOptions,
             statusCode: 499,
             data: {'message': 'Request queued offline'},

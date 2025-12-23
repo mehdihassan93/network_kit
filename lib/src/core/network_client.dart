@@ -34,8 +34,6 @@ enum HttpMethod {
 /// - **Authentication**: Interceptor-based token injection.
 /// - **Offline Support**: Mutation queuing and persistence.
 class NetworkClient {
-  final Dio _dio;
-
   /// Creates a [NetworkClient] instance.
   NetworkClient({
     required String baseUrl,
@@ -52,8 +50,8 @@ class NetworkClient {
             ) {
     
     // Optimized: Move JSON decoding to a background isolate (compute) to prevent UI Jank.
-    // Note: Using DefaultTransformer which allows setting the jsonDecodeCallback.
-    (_dio.transformer as DefaultTransformer).jsonDecodeCallback = (t) => compute(_parseJson, t);
+    // Using BackgroundTransformer which is specialized for this in Dio 5+.
+    _dio.transformer = BackgroundTransformer()..jsonDecodeCallback = (t) => compute(_parseJson, t);
 
     // Interceptors
     if (getToken != null) {
@@ -64,6 +62,8 @@ class NetworkClient {
     }
     _dio.interceptors.add(RetryInterceptor(dio: _dio));
   }
+
+  final Dio _dio;
 
   /// Exposes the raw [Dio] instance if needed.
   Dio get dio => _dio;
@@ -78,7 +78,7 @@ class NetworkClient {
     CancelToken? cancelToken,
   }) async {
     try {
-      final response = await _dio.request(
+      final response = await _dio.request<dynamic>(
         path,
         data: data,
         queryParameters: queryParameters,
@@ -91,10 +91,10 @@ class NetworkClient {
       final responseData = response.data;
 
       if (responseData == null) {
-        return const Failure('Response data was null');
+        return const Failure<T>('Response data was null');
       }
 
-      return Success(responseData as T);
+      return Success<T>(responseData as T);
     } catch (e) {
       return ExceptionHandler.handleException<T>(e);
     }

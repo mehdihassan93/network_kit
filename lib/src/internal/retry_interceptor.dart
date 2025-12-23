@@ -5,6 +5,13 @@ import 'package:dio/dio.dart';
 /// It strictly targets **timeouts** (Connection, Send, Receive) to avoid 
 /// unnecessary retries on logic errors like 400 (Bad Request) or 401 (Unauthorized).
 class RetryInterceptor extends Interceptor {
+  /// Creates a [RetryInterceptor].
+  RetryInterceptor({
+    required this.dio,
+    this.maxRetries = 3,
+    this.delays = const [1000, 2000, 4000],
+  });
+
   /// The [Dio] instance required to re-transmit the request.
   final Dio dio;
 
@@ -17,13 +24,6 @@ class RetryInterceptor extends Interceptor {
 
   /// A unique key used to track the retry count inside the [RequestOptions.extra] map.
   static const String _retryCountKey = 'network_kit_retry_count';
-
-  /// Creates a [RetryInterceptor].
-  RetryInterceptor({
-    required this.dio,
-    this.maxRetries = 3,
-    this.delays = const [1000, 2000, 4000],
-  });
 
   @override
   Future<void> onError(
@@ -53,7 +53,7 @@ class RetryInterceptor extends Interceptor {
 
       try {
         // 6. Re-execute the request
-        final response = await dio.fetch(err.requestOptions);
+        final response = await dio.fetch<dynamic>(err.requestOptions);
         
         // 7. If successful, resolve the original request with this response
         return handler.resolve(response);

@@ -7,7 +7,12 @@ void main() async {
   runApp(const MyApp());
 }
 
+/// **MyApp** is the entry point for the Network Kit demonstration.
+///
+/// It showcases the "Magic Trick" of offline queuing and automatic synchronization
+/// using a simple log-based UI.
 class MyApp extends StatefulWidget {
+  /// Creates the [MyApp] widget.
   const MyApp({super.key});
 
   @override
@@ -44,18 +49,18 @@ class _MyAppState extends State<MyApp> {
     _addLog("⏳ Requesting Post #1...");
 
     // 3. Make the Request
-    final result = await _client.request<Map<String, dynamic>>(
+    final result = await _client.request<Map<dynamic, dynamic>>(
       path: '/posts/1',
       method: HttpMethod.get,
     );
 
     // 4. Handle the Result (Dart 3 Pattern Matching)
     switch (result) {
-      case Success(data: final data):
+      case Success<Map<dynamic, dynamic>>(data: final data):
         _addLog("🟢 SUCCESS: ${data['title']}");
-      case Failure(statusCode: 499, message: final msg):
+      case Failure<dynamic>(statusCode: 499, message: final msg):
         _addLog("🟠 OFFLINE: $msg (Saved to Queue)");
-      case Failure(message: final msg):
+      case Failure<dynamic>(message: final msg):
         _addLog("🔴 ERROR: $msg");
     }
   }
