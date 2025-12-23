@@ -14,9 +14,7 @@ void main() {
       final result = ExceptionHandler.handleException<dynamic>(dioError);
 
       expect(result, isA<Failure<dynamic>>());
-      if (result is Failure<dynamic>) {
-        expect(result.message, 'Connection timed out');
-      }
+      expect(result.message, 'Connection timed out');
     });
 
     test('should extract message from server response on badResponse', () {
@@ -33,10 +31,8 @@ void main() {
       final result = ExceptionHandler.handleException<dynamic>(dioError);
 
       expect(result, isA<Failure<dynamic>>());
-      if (result is Failure<dynamic>) {
-        expect(result.message, 'Invalid credentials');
-        expect(result.statusCode, 400);
-      }
+      expect(result.message, 'Invalid credentials');
+      expect(result.statusCode, 400);
     });
 
     test('should return "Unexpected Error" for non-Dio errors', () {
@@ -45,9 +41,7 @@ void main() {
       final result = ExceptionHandler.handleException<dynamic>(error);
 
       expect(result, isA<Failure<dynamic>>());
-      if (result is Failure<dynamic>) {
-        expect(result.message, 'Unexpected Error');
-      }
+      expect(result.message, 'Unexpected Error');
     });
   });
 }
