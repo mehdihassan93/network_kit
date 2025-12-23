@@ -12,11 +12,11 @@ sealed class NetworkResult<T> {
 ///
 /// It contains the data [T] returned by the server.
 class Success<T> extends NetworkResult<T> {
-  /// The payload returned from the API.
-  final T data;
-
   /// Creates a [Success] instance with the given [data].
   const Success(this.data);
+
+  /// The payload returned from the API.
+  final T data;
 }
 
 /// **Failure** represents a failed network request.
@@ -24,12 +24,12 @@ class Success<T> extends NetworkResult<T> {
 /// It provides an error [message] and an optional [statusCode] to help
 /// the UI decide how to display the error.
 class Failure<T> extends NetworkResult<T> {
+  /// Creates a [Failure] instance with a [message] and optional [statusCode].
+  const Failure(this.message, {this.statusCode});
+
   /// A human-readable message explaining what went wrong.
   final String message;
 
   /// The HTTP status code returned by the server (e.g., 404, 500, or 499 for offline).
   final int? statusCode;
-
-  /// Creates a [Failure] instance with a [message] and optional [statusCode].
-  const Failure(this.message, {this.statusCode});
 }

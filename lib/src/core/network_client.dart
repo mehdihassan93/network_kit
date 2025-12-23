@@ -91,7 +91,7 @@ class NetworkClient {
       final responseData = response.data;
 
       if (responseData == null) {
-        return const Failure<T>('Response data was null');
+        return Failure<T>('Response data was null');
       }
 
       return Success<T>(responseData as T);
