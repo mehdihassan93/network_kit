@@ -6,6 +6,7 @@ import '../mocks.dart';
 
 void main() {
   group('NetworkClient Unit Tests', () {
+    registerTestFallbacks();
     late MockDio mockDio;
     late NetworkClient client;
 

@@ -11,6 +11,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   
   group('Network Kit Stress & Complexity Tests', () {
+    registerTestFallbacks();
     late OfflineStorage storage;
     late MockNetworkClient mockClient;
     late SyncManager syncManager;
@@ -89,10 +90,12 @@ void main() {
       }
 
       when(() => mockClient.request<dynamic>(
-        path: any<String>(named: 'path'),
-        method: any<HttpMethod>(named: 'method'),
-        data: any<dynamic>(named: 'data'),
-        queryParameters: any<Map<String, dynamic>?>(named: 'queryParameters'),
+        path: any(named: 'path'),
+        method: any(named: 'method'),
+        data: any(named: 'data'),
+        queryParameters: any(named: 'queryParameters'),
+        options: any(named: 'options'),
+        cancelToken: any(named: 'cancelToken'),
       )).thenAnswer((_) async => const Success<dynamic>({'status': 'ok'}));
 
       final watch = Stopwatch()..start();

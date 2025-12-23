@@ -10,6 +10,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Sync Integration Tests', () {
+    registerTestFallbacks();
     late OfflineStorage storage;
     late MockDio mockDio;
     late NetworkClient client;
