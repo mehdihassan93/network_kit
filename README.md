@@ -4,84 +4,79 @@
 
 # Network Kit 🚀
 
-A robust, production-ready Flutter networking engine built on top of `dio`.  
-It transforms standard HTTP requests into a **resilient, offline-first subsystem** with minimal configuration.
+### Stop writing boilerplate. Start writing resilient apps.
+
+Network Kit isn't just another wrapper around `dio`. It's a high-performance, opinionated networking engine designed to solve the three most annoying problems in Flutter development: **Janky UIs during heavy parsing**, **Messy try-catch error handling**, and **Data loss on intermittent connections.**
 
 [![Pub.dev](https://img.shields.io/pub/v/network_kit?color=blue&style=for-the-badge)](https://pub.dev/packages/network_kit)
-![License](https://img.shields.io/github/license/yourusername/network_kit?style=for-the-badge)
+![License](https://img.shields.io/github/license/mehdihassan93/network_kit?style=for-the-badge)
 
 ---
 
-## ✨ Features
+## 🧐 Why Network Kit?
 
-- **🛡️ Type-Safe Functional Results**: Uses Dart 3 sealed classes to return `Success` or `Failure`. No more messy try-catch blocks in your UI.
-- **🔄 Smart Retries**: Automatically retries on timeouts and connection failures with exponential backoff (1s, 2s, 4s).
-- **📦 Offline Queuing**: Automatically queues mutation requests (POST, PUT, etc.) when the device is offline.
-- **⚡ Auto-Sync**: Automatically replays your offline queue the moment connectivity is restored.
-- **🔑 Zero-Effort Auth**: Simple pull-based token injection and 401 handling.
-- **💾 SharedPreferences Persistence**: The offline queue survives app restarts.
-- **⚡ Background Parsing**: JSON decoding happens in separate Isolates to prevent UI jank.
+Most developers treat networking as a secondary concern. They throw a `dio.get()` in a repository and pray the wifi stays on. Network Kit treats connectivity as a **first-class citizen**.
 
----
-
-## 🚀 Getting Started
-
-Check out the [Quick Start Guide](docs/guides/getting_started.md) for a detailed walkthrough.
-
-### 1. Installation
-
-Add to your `pubspec.yaml`:
-
-```yaml
-dependencies:
-  network_kit: ^0.0.1
-```
-
-### 2. Basic Initialization
-
-Configure your `NetworkClient` and `SyncManager`:
-
-```dart
-// 1. Initialize Storage and Client
-final storage = OfflineStorage();
-final client = NetworkClient(
-  baseUrl: 'https://api.example.com',
-  storage: storage,
-  getToken: () async => 'MY_SECURE_TOKEN',
-);
-
-// 2. Setup Sync Manager
-final syncManager = SyncManager(client, storage: storage);
-syncManager.startMonitoring(); // Listen for connection and auto-sync
-```
+- **🛡️ No More Exceptions**: We use Dart 3 Sealed Classes. You *must* handle both success and failure states. Your compiler becomes your QA.
+- **⚡ Background Parsing is Default**: We believe the UI thread is for UI. All JSON decoding happens in background Isolates, automatically. No more frame drops.
+- **📦 The "Magic" Offline Vault**: If a user submits a form in a tunnel, the request isn't lost. It's snapshotted, persisted, and replayed as soon as the signal returns.
+- **🔄 Defensive Retries**: We don't just retry everything. We use exponential backoff exclusively for transient timeouts, so you don't spam your backend on logic errors.
 
 ---
 
-## 🛠️ Architecture
+## 🛠️ The Architecture
 
-The package is built in **specific layers** to ensure maximum stability and separation of concerns.
+We built this package in three defensive layers, visualized below:
 
 <p align="center">
   <img src="assets/architecture.png" alt="Architecture Diagram" width="500px">
 </p>
 
-1.  **The Core**: Clean wrapper around `dio` with robust exception mapping and background parsing.
-2.  **The Guard**: Interceptors for smart retries and transparent authentication.
-3.  **The Vault**: Persistent offline queuing and order-preserving synchronization (O(n/5) efficiency).
+1.  **The Core**: Native `dio` foundation with robust `SocketException` mapping.
+2.  **The Guard**: Automatic Auth-injection and defensive retry interceptors.
+3.  **The Vault**: The persistent FIFO queue that ensures your users' data survives app kills and signal drops.
 
-See the [Architecture Deep Dive](docs/guides/architecture.md) for more details.
-
----
-
-## 🧪 Performance & Safety
-
-Network Kit is audited for **Time and Space Complexity**:
-- **Disk I/O**: Batched synchronization reduces disk writes by 80%.
-- **CPU**: JSON parsing is isolated from the UI thread.
-- **Memory**: Circular buffer logic keeps the offline queue capped at 200 items.
+[Read the Architecture Deep Dive →](docs/guides/architecture.md)
 
 ---
 
-## 📄 License
+## 🚀 Speed Run
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### 1. Installation
+```yaml
+dependencies:
+  network_kit: ^0.0.1
+```
+
+### 2. Zero-Config Setup
+```dart
+final client = NetworkClient(
+  baseUrl: 'https://api.app.com',
+  storage: OfflineStorage(), // Optional: Enables the Vault
+);
+
+final syncManager = SyncManager(client);
+syncManager.startMonitoring(); // Replays your queue automatically
+```
+
+### 3. Usage (The Functional Way)
+```dart
+final result = await client.request<Map>(path: '/post', method: HttpMethod.post);
+
+switch (result) {
+  case Success(data: final data):
+    print('Success: $data');
+  case Failure(statusCode: 499):
+    print('Saved to offline vault!');
+  case Failure(message: final err):
+    print('Dead end: $err');
+}
+```
+
+---
+
+## 📄 License & Safety
+- **MIT Licensed**: Open source and free for commercial use.
+- **Safety First**: Implements a 200-item circular buffer for storage protection and batched I/O for battery efficiency.
+
+[Getting Started Guide](docs/guides/getting_started.md) | [Report a Bug](https://github.com/mehdihassan93/network_kit/issues)

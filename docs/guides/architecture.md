@@ -1,32 +1,40 @@
-# Architecture Deep Dive 🏗️
+# Architecture Deep Dive: Building for Resilience 🏗️
 
-Network Kit is designed with a **Layered Resilience Strategy**. Each layer builds upon the other to create a system that is both simple to use and incredibly hard to break.
+Network Kit is not a library; it's a **strategy**. Every line of code exists to protect the two most valuable things in your app: **The User's Data** and **The UI's Performance**.
 
-## The Three Layers
+## The Defensive Layers
 
-### 1. The Core (Foundation)
-The bottom layer is a thin but powerful wrapper around `dio`.
-- **Background Parsing**: We use `DefaultTransformer` with a custom `jsonDecodeCallback` that runs on a background Isolate.
-- **Functional Mapping**: All exceptions (Timeouts, 404s, 500s) are mapped into a unified `NetworkResult<T>` sealed class.
+### Layer 1: The Optimized Core
+Most networking libraries block the UI thread during JSON parsing. We fixed that.
+- **Background Isolates**: Every response is decoded using `compute()`. Even if your API returns a 5MB JSON object, your Flutter animations will stay at a fluid 60-120 FPS.
+- **Strict Mapping**: We don't throw exceptions. We catch them at the boundary and map them to `Failure` types with human-readable reasons (Timeouts, Socket errors, etc).
 
-### 2. The Guard (Resilience)
-The middle layer consists of automatic Interceptors that protect your app from transient failures.
-- **Smart Retries**: On timeouts, the client automatically retries with exponential backoff (1s -> 2s -> 4s).
-- **Auth Layer**: Every request pull the latest token right before being sent, ensuring you never send an expired token.
+### Layer 2: The Guard Interceptors
+This layer acts as a filter for every outgoing and incoming byte.
+- **Pull-Based Auth**: Instead of passing a static token, you pass a callback. We pull the token *milliseconds* before the request leaves the device.
+- **Smart Backoff**: Retrying a `400 Bad Request` is a waste of battery. We only retry transient timeouts.
 
-### 3. The Vault (Persistence)
-The top layer provides the "Magic Trick" of offline-first apps.
-- **Snapshot Interception**: If a mutation (POST/PUT/PATCH/DELETE) fails due to no internet, we snapshot the request metadata.
-- **FIFO Queue**: The request is stored in `SharedPreferences`.
-- **Efficient Sync**: `SyncManager` replays these requests in batches (O(n/5) efficiency) once signal returns.
+### Layer 3: The Vault (Persistence Engine)
+This is where Network Kit differs from a standard wrapper.
+- **FIFO Guarantee**: We preserve the order of user actions. If a user "Creates an Account" then "Updates a Profile" while offline, we replay them in that exact order once they get signal.
+- **O(n/5) Efficiency**: Writing to disk is expensive. We batch the synchronization process to update the database every 5 items, reducing battery drain and storage wear.
 
-## Data Integrity Policies
+## 🤝 Design Trade-offs & Decisions
 
-### FIFO (First-In-First-Out)
-We strictly maintain the order of requests. If Request B depends on Request A (e.g., Create Post, then Upload Image), and Request A fails, we stop the sync process until Request A succeeds.
+We made some hard choices during development. Here is the logic:
 
-### Size Capping
-To prevent device storage bloat, the vault is capped at **200 entries**. Once the limit is reached, the oldest (and likely most stale) request is evicted to make room for new ones.
+### ❌ Why no FormData support in the Vault?
+We explicitly exclude `FormData` from the offline queue. Why?
+1. **Invalid Paths**: If you select an image from the gallery, save the path, and the app restarts, that temporary path might be purged by the OS. Replaying the request would fail.
+2. **Persistence Overhead**: Serializing a 10MB image into `SharedPreferences` as a base64 string is a recipe for an OOM (Out of Memory) crash.
 
-### FormData Constraint
-Currently, `FormData` (binary file uploads) is **not** queued for offline sync. This is a deliberate design choice to avoid the complexity of serializing massive files and potential file-system path invalidation upon app restart.
+### 🛡️ The 200-Item Cap
+We use a circular buffer for the vault. If a user makes 300 requests offline, we drop the oldest 100.
+**Reasoning**: We prioritize app stability over infinite accumulation. A 200-item queue is massive enough for 99% of use cases while keeping `SharedPreferences` search times fast.
+
+### 🔋 Battery vs. Speed
+The `SyncManager` waits for a stable connection before replaying. We don't spam the radios on "flaky" connections. We'd rather wait 30 extra seconds than drain 5% of the user's battery on failed replay attempts.
+
+---
+
+[Back to README](../README.md)

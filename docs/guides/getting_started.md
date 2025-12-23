@@ -1,88 +1,89 @@
-# Getting Started with Network Kit 🚀
+# Getting Started guide: From Zero to Resilient 🚀
 
-This guide will help you integrate **Network Kit** into your Flutter application for a robust, resilient networking experience.
+If you are tired of your app crashing because of a 404 or freezing because the API returned a massive 10MB JSON, you're in the right place. This guide covers how to set up Network Kit properly.
 
-## Installation
+## 📦 Setting the Foundation
 
-Add `network_kit` to your `pubspec.yaml`:
+Add the dependency to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  network_kit:
-    path: ../network_kit # Or use the pub version once published
+  network_kit: ^0.0.1
 ```
 
-## Basic Setup
+## 🏗️ Step 1: Initialize the Client
 
-### 1. Create your Client
-
-The `NetworkClient` is your primary entry point. It handles all the heavy lifting of `dio`, including interceptors and error handling.
+The `NetworkClient` is the brain of your network layer. In a production app, you should initialize this as a Singleton or via a dependency injection tool like `GetIt`.
 
 ```dart
-import 'package:network_kit/network_kit.dart';
-
 final client = NetworkClient(
-  baseUrl: 'https://api.example.com',
-  storage: OfflineStorage(), // Enables offline queuing
-  getToken: () async {
-    // Return your auth token here (e.g., from Flutter Secure Storage)
-    return 'your_auth_token';
-  },
+  baseUrl: 'https://api.myapp.com',
+  // Providing storage enables the 'Offline Vault' automatically
+  storage: OfflineStorage(), 
+  // This callback is called before EVERY request.
+  // Perfect for refreshing tokens from secure storage.
+  getToken: () async => await mySecurePrefs.read('token'),
 );
 ```
 
-### 2. Initialize the Sync Manager
+## 🔄 Step 2: The Connectivity Watchdog
 
-To enable automatic re-syncing of requests made while offline, you need to use the `SyncManager`.
+Networking isn't just about making requests; it's about handling the *restoration* of signal. The `SyncManager` watches the device's radios and clears your offline queue the moment valid internet returns.
 
 ```dart
-final syncManager = SyncManager(client);
-
 void main() {
-  syncManager.startMonitoring(); // Start listening for connectivity changes
-  runApp(MyApp());
+  // 1. Initialize your client
+  // 2. Start the watchdog
+  SyncManager(client).startMonitoring();
+  
+  runApp(const MyApp());
 }
 ```
 
-## Making Requests
+## ⚡ Step 3: Making Functional Requests
 
-Network Kit uses Dart 3 **Sealed Classes** for type-safe error handling. This means you don't need `try-catch` blocks!
+We hate `try-catch`. They make code indentation deep and scary. Network Kit returns a `NetworkResult`, forcing you to handle errors safely.
 
+### The Success Path
 ```dart
-Future<void> fetchUser() async {
-  final result = await client.request<Map<String, dynamic>>(
-    path: '/user/profile',
-    method: HttpMethod.get,
-  );
-
-  switch (result) {
-    case Success(data: final user):
-      print('User name: ${user['name']}');
-      
-    case Failure(statusCode: final code, message: final msg):
-      if (code == 499) {
-        print('Offline! Request queued for later.');
-      } else {
-        print('Error: $msg');
-      }
-  }
-}
-```
-
-## Advanced Configuration
-
-### Custom Header Injection
-
-You can pass an `Options` object from `dio` to the `request` method for one-off header changes:
-
-```dart
-await client.request(
-  path: '/test',
+final result = await client.request<Map<String, dynamic>>(
+  path: '/profile',
   method: HttpMethod.get,
-  options: Options(headers: {'Custom-Header': 'Value'}),
 );
+
+if (result is Success) {
+  final user = (result as Success).data;
+  // Do something with user
+}
 ```
 
-### Background Parsing
+### The Clean Way (Pattern Matching)
+Since Dart 3, you should use `switch` for the most readable code:
 
-Network Kit automatically uses `compute()` to parse JSON responses and data. This ensures your UI stays responsive (60+ FPS) even when handling massive JSON payloads.
+```dart
+switch (result) {
+  case Success(data: final data):
+    _showProfile(data);
+    
+  case Failure(statusCode: 499):
+    _notifyUser("You're offline, but we've got your back! Changes will sync soon.");
+    
+  case Failure(message: final msg):
+    _showErrorSnackBar(msg);
+}
+```
+
+## 🧪 Advanced: Why 499?
+
+In Network Kit, HTTP Status **499** is a custom signal. It means the request was **intercepted and persisted to the Vault**. 
+
+When you see a 499:
+1. The request was a mutation (POST, PUT, etc.).
+2. There was no internet connection.
+3. The request data was successfully serialized and saved to disk.
+
+Treat 499 as a **"Success for the future"** rather than a failure.
+
+---
+
+[Next: Architecture Deep Dive →](architecture.md)
