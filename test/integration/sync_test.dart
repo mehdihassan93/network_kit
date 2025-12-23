@@ -15,22 +15,21 @@ void main() {
 
   group('Sync Integration Tests', () {
     late OfflineStorage storage;
-    late MockDio mockDio;
+    late MockAdapter mockAdapter;
     late NetworkClient client;
     late SyncManager syncManager;
 
     setUp(() {
       SharedPreferences.setMockInitialValues({});
       storage = OfflineStorage();
-      mockDio = MockDio();
+      mockAdapter = MockAdapter();
       
-      when(() => mockDio.transformer).thenReturn(BackgroundTransformer());
-      final interceptors = Interceptors();
-      when(() => mockDio.interceptors).thenReturn(interceptors);
+      final dio = Dio(BaseOptions(baseUrl: 'https://test.com'));
+      dio.httpClientAdapter = mockAdapter;
 
       client = NetworkClient(
         baseUrl: 'https://test.com',
-        dio: mockDio,
+        dio: dio,
         storage: storage,
       );
 
@@ -38,18 +37,10 @@ void main() {
     });
 
     test('Full sync loop: capture offline request and replay once back online', () async {
-      // 1. Force a connection error to trigger queuing.
-      when(() => mockDio.request<dynamic>(
-            any<String>(),
-            data: any<dynamic>(named: 'data'),
-            queryParameters: any<Map<String, dynamic>?>(named: 'queryParameters'),
-            cancelToken: any<CancelToken?>(named: 'cancelToken'),
-            options: any<Options?>(named: 'options'),
-          )).thenThrow(DioException(
-        requestOptions: RequestOptions(path: '/post'),
-        error: const SocketException('No Internet'),
-        type: DioExceptionType.connectionError,
-      ));
+      // 1. Mock the adapter to throw a network error.
+      // This triggers the real Dio pipeline, which calls QueueInterceptor.
+      when(() => mockAdapter.fetch(any(), any(), any()))
+          .thenThrow(SocketException('No Internet'));
 
       // 2. Attempt a mutation request.
       final result = await client.request<dynamic>(
@@ -66,18 +57,18 @@ void main() {
       expect(queue.length, 1);
       expect(queue.first, contains('/post'));
 
-      // 4. Mock server recovery for the replay attempt.
-      when(() => mockDio.request<dynamic>(
-            any<String>(),
-            data: any<dynamic>(named: 'data'),
-            queryParameters: any<Map<String, dynamic>?>(named: 'queryParameters'),
-            cancelToken: any<CancelToken?>(named: 'cancelToken'),
-            options: any<Options?>(named: 'options'),
-          )).thenAnswer((_) async => Response<dynamic>(
-            requestOptions: RequestOptions(path: '/post'),
-            statusCode: 200,
-            data: {'id': 1},
-          ));
+      // 4. Mock server recovery.
+      // We return a successful ResponseBody from the adapter.
+      final responsePayload = jsonEncode({'id': 1}).codeUnits;
+      when(() => mockAdapter.fetch(any(), any(), any())).thenAnswer(
+        (_) async => ResponseBody.fromBytes(
+          Uint8List.fromList(responsePayload),
+          200,
+          headers: {
+            Headers.contentTypeHeader: [Headers.jsonContentType],
+          },
+        ),
+      );
 
       // 5. Run the synchronization process.
       await syncManager.startSync();
