@@ -11,8 +11,11 @@ class MockNetworkClient extends Mock implements NetworkClient {}
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   
-  group('Network Kit Stress & Complexity Tests', () {
+  setUpAll(() {
     registerTestFallbacks();
+  });
+
+  group('Network Kit Stress & Complexity Tests', () {
     late OfflineStorage storage;
     late MockNetworkClient mockClient;
     late SyncManager syncManager;
@@ -90,14 +93,14 @@ void main() {
         await storage.saveRequest(jsonPayload);
       }
 
-      when(() => mockClient.request<dynamic>(
+      when(() => mockClient.request<Map<String, dynamic>>(
         path: any<String>(named: 'path'),
         method: any<HttpMethod>(named: 'method'),
         data: any<dynamic>(named: 'data'),
         queryParameters: any<Map<String, dynamic>?>(named: 'queryParameters'),
         options: any<Options?>(named: 'options'),
         cancelToken: any<CancelToken?>(named: 'cancelToken'),
-      )).thenAnswer((_) async => const Success<dynamic>({'status': 'ok'}));
+      )).thenAnswer((_) async => const Success<Map<String, dynamic>>({'status': 'ok'}));
 
       final watch = Stopwatch()..start();
       await syncManager.startSync();

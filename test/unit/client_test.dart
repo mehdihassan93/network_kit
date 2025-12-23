@@ -5,8 +5,11 @@ import 'package:network_kit/network_kit.dart';
 import '../mocks.dart';
 
 void main() {
-  group('NetworkClient Unit Tests', () {
+  setUpAll(() {
     registerTestFallbacks();
+  });
+
+  group('NetworkClient Unit Tests', () {
     late MockDio mockDio;
     late NetworkClient client;
 

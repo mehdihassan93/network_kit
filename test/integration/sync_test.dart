@@ -9,8 +9,11 @@ import '../mocks.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('Sync Integration Tests', () {
+  setUpAll(() {
     registerTestFallbacks();
+  });
+
+  group('Sync Integration Tests', () {
     late OfflineStorage storage;
     late MockDio mockDio;
     late NetworkClient client;
