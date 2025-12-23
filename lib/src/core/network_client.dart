@@ -8,33 +8,24 @@ import '../internal/retry_interceptor.dart';
 import '../internal/queue_interceptor.dart';
 import '../internal/offline_storage.dart';
 
-/// Top-level function for background JSON parsing to avoid UI thread blocking.
+/// decodes JSON in a background isolate to keep the UI smooth.
 dynamic _parseJson(String text) {
   return jsonDecode(text);
 }
 
-/// Supported HTTP methods for the [NetworkClient].
+/// HTTP methods supported by the client.
 enum HttpMethod {
-  /// GET request
   get,
-  /// POST request
   post,
-  /// PUT request
   put,
-  /// PATCH request
   patch,
-  /// DELETE request
   delete,
 }
 
-/// **NetworkClient** is the primary interface for making network requests.
-///
-/// It wraps the `Dio` HTTP client with production-grade optimizations:
-/// - **Background Parsing**: JSON decoding happens in a separate isolate.
-/// - **Authentication**: Interceptor-based token injection.
-/// - **Offline Support**: Mutation queuing and persistence.
+/// Main entry point for making network requests.
+/// Wraps Dio with background parsing, auth, and offline queuing.
 class NetworkClient {
-  /// Creates a [NetworkClient] instance.
+  /// Initializes the client with a base URL and optional configurations.
   NetworkClient({
     required String baseUrl,
     Future<String?> Function()? getToken,
@@ -49,11 +40,10 @@ class NetworkClient {
               ),
             ) {
     
-    // Optimized: Move JSON decoding to a background isolate (compute) to prevent UI Jank.
-    // Using BackgroundTransformer which is specialized for this in Dio 5+.
+    // Enable background JSON parsing using the compute function.
     _dio.transformer = BackgroundTransformer()..jsonDecodeCallback = (t) => compute(_parseJson, t);
 
-    // Interceptors
+    // Setup plumbing: Auth, Offline Queuing, and Retries.
     if (getToken != null) {
       _dio.interceptors.add(AuthInterceptor(getToken: getToken));
     }
@@ -65,10 +55,10 @@ class NetworkClient {
 
   final Dio _dio;
 
-  /// Exposes the raw [Dio] instance if needed.
+  /// Underlying Dio instance for advanced usage.
   Dio get dio => _dio;
 
-  /// Performs a network request and returns a [NetworkResult].
+  /// Executes a request and returns a type-safe [NetworkResult].
   Future<NetworkResult<T>> request<T>({
     required String path,
     required HttpMethod method,

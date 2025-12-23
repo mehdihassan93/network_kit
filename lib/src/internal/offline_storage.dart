@@ -1,36 +1,24 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// **OfflineStorage** defines the contract for persisting offline requests.
-///
-/// It uses `SharedPreferences` by default, but can be subclassed or mocked 
-/// for testing purposes.
+/// Handles the persistence of offline request metadata using SharedPreferences.
 class OfflineStorage {
-  /// The key used to store the list of serialized requests in SharedPreferences.
   static const String _queueKey = 'network_kit_queue';
-
-  /// Maximum number of requests allowed in the queue to prevent memory bloat.
   static const int _maxQueueSize = 200;
 
-  /// Internal SharedPreferences instance used for persistence.
   SharedPreferences? _prefs;
 
-  /// Private helper to ensure SharedPreferences is initialized.
+  /// Lazy instance of SharedPreferences.
   Future<SharedPreferences> get _instance async {
     _prefs ??= await SharedPreferences.getInstance();
     return _prefs!;
   }
 
-  /// Saves a serialized request string to the end of the current queue.
-  ///
-  /// This implementation follows a **FIFO (First-In-First-Out)** logic.
-  /// If the queue exceeds [_maxQueueSize], the oldest request is dropped.
-  /// 
-  /// [jsonRequest] - The JSON string representing the request metadata.
+  /// Appends a request to the end of the queue. 
+  /// Drops the oldest request if the size exceeds [_maxQueueSize].
   Future<void> saveRequest(String jsonRequest) async {
     final prefs = await _instance;
     final queue = prefs.getStringList(_queueKey) ?? [];
     
-    // Safety check: Remove oldest if we hit the limit
     if (queue.length >= _maxQueueSize) {
       queue.removeAt(0);
     }
@@ -39,29 +27,19 @@ class OfflineStorage {
     await prefs.setStringList(_queueKey, queue);
   }
 
-  /// Saves a full list of requests to the storage at once.
-  /// 
-  /// This is used by the [SyncManager] for batched updates to improve 
-  /// disk I/O performance (O(n/batchSize)).
+  /// Overwrites the entire queue. Used for batched sync operations.
   Future<void> saveQueue(List<String> queue) async {
     final prefs = await _instance;
     await prefs.setStringList(_queueKey, queue);
   }
 
-  /// Retrieves all pending serialized requests in the order they were saved.
-  ///
-  /// Returns a [List<String>] where each string is a JSON-encoded request.
+  /// Fetches the current list of serialized requests.
   Future<List<String>> getQueue() async {
     final prefs = await _instance;
     return prefs.getStringList(_queueKey) ?? [];
   }
 
-  /// Removes a specific serialized request from the persistent storage.
-  ///
-  /// This is typically called by the [SyncManager] after a request has 
-  /// been successfully replayed to the server.
-  ///
-  /// [jsonRequest] - The exact string content to be removed.
+  /// Deletes a specific request from the persistent store.
   Future<void> removeRequest(String jsonRequest) async {
     final prefs = await _instance;
     final queue = prefs.getStringList(_queueKey) ?? [];
@@ -70,7 +48,7 @@ class OfflineStorage {
     }
   }
 
-  /// Completely wipes the offline queue.
+  /// Wipes all pending requests.
   Future<void> clearQueue() async {
     final prefs = await _instance;
     await prefs.remove(_queueKey);

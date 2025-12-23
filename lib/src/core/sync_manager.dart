@@ -5,23 +5,18 @@ import 'network_client.dart';
 import '../internal/offline_storage.dart';
 import '../models/network_result.dart';
 
-/// **SyncManager** is the engine responsible for replaying requests that were 
-/// failed and queued while the device was offline.
+/// Manages the re-execution of failed requests when connectivity is restored.
 class SyncManager {
-  /// Creates a [SyncManager].
+  /// Initializes the manager with a network client and optional storage.
   SyncManager(this.client, {OfflineStorage? storage}) 
       : storage = storage ?? OfflineStorage();
 
-  /// The [NetworkClient] used to re-execute the requests.
   final NetworkClient client;
-  
-  /// The [OfflineStorage] where temporary requests are persisted.
   final OfflineStorage storage;
 
-  /// Subscription to track connectivity status changes.
   StreamSubscription<List<ConnectivityResult>>? _subscription;
 
-  /// Starts monitoring connectivity status to automatically trigger sync.
+  /// Listens for connectivity changes and triggers a sync when back online.
   void startMonitoring() {
     _subscription?.cancel(); 
     _subscription = Connectivity().onConnectivityChanged.listen((results) {
@@ -32,31 +27,26 @@ class SyncManager {
     });
   }
 
-  /// Stops listening for connectivity changes.
+  /// Stops monitoring connectivity changes.
   void stopMonitoring() {
     _subscription?.cancel();
     _subscription = null;
   }
 
-  /// **Refactored: Optimized Batched Synchronization**
-  ///
-  /// This method uses a "Memory-First" approach to reduce disk I/O from 
-  /// O(n) to O(n/5), while maintaining crash safety via periodic batch saves.
+  /// Processes the offline queue sequentially to maintain request order.
+  /// Uses a batch-saving strategy to minimize disk I/O while keeping data safe.
   Future<void> startSync() async {
-    // 1. Load the entire queue once into memory
     final queue = await storage.getQueue();
     if (queue.isEmpty) return;
 
-    // Create a mutable copy for in-memory processing
     final memoryQueue = List<String>.from(queue);
     int processedCount = 0;
 
-    // 2. Process items sequentially to ensure FIFO order
     for (final jsonRequest in queue) {
       try {
         final Map<String, dynamic> requestMap = jsonDecode(jsonRequest) as Map<String, dynamic>;
         
-        // 3. Replay the request
+        // Re-execute the request
         final result = await client.request<dynamic>(
           path: requestMap['path'] as String,
           method: _parseMethod(requestMap['method'] as String),
@@ -65,29 +55,28 @@ class SyncManager {
         );
 
         if (result is Success<dynamic>) {
-          // 4. Update memory state
           memoryQueue.remove(jsonRequest);
           processedCount++;
 
-          // 5. Batch Safety: Save to disk every 5 items to balance speed and data integrity
+          // Periodically save progress to disk to prevent data loss on crash.
           if (processedCount % 5 == 0) {
             await storage.saveQueue(memoryQueue);
           }
         } else {
-          // Failure (still offline): Stop to preserve order for the next attempt
+          // If we're still offline or the server fails, stop to preserve order.
           break;
         }
       } catch (_) {
-        // Data corruption: remove this specific item and continue
+        // Drop corrupted items to keep the queue moving.
         memoryQueue.remove(jsonRequest);
       }
     }
 
-    // 6. Final Sync: Ensure the disk matches our final memory state
+    // Final persistent save of the remaining queue state.
     await storage.saveQueue(memoryQueue);
   }
 
-  /// Translates a string method name back to a [HttpMethod] enum.
+  /// Helpers to convert string method names back to enums.
   HttpMethod _parseMethod(String method) {
     return HttpMethod.values.firstWhere(
       (m) => m.name.toLowerCase() == method.toLowerCase(),

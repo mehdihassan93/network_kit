@@ -11,7 +11,7 @@ void main() {
 
     setUp(() {
       mockDio = MockDio();
-      // Setup background transformer mock for NetworkClient constructor
+      // mock the transformer and interceptors for the constructor
       when(() => mockDio.transformer).thenReturn(BackgroundTransformer());
       when(() => mockDio.interceptors).thenReturn(Interceptors());
       
@@ -21,7 +21,7 @@ void main() {
       );
     });
 
-    test('Mock a 200 OK response. Verify it returns Success', () async {
+    test('should return Success when server returns 200 OK', () async {
       final response = Response<dynamic>(
         requestOptions: RequestOptions(path: '/test'),
         data: {'id': 1},
@@ -45,7 +45,7 @@ void main() {
       expect((result as Success<Map<dynamic, dynamic>>).data['id'], 1);
     });
 
-    test('Mock a 500 Server Error. Verify it returns Failure', () async {
+    test('should return Failure when server returns 500 Error', () async {
       when(() => mockDio.request<dynamic>(
         any(),
         data: any(named: 'data'),
@@ -70,7 +70,7 @@ void main() {
       expect((result as Failure<dynamic>).statusCode, 500);
     });
 
-    test('Mock a connectionTimeout. Verify it returns Failure message', () async {
+    test('should return Failure message on connection timeout', () async {
       when(() => mockDio.request<dynamic>(
         any(),
         data: any(named: 'data'),

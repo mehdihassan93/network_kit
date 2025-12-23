@@ -13,7 +13,7 @@ void main() {
       storage = OfflineStorage();
     });
 
-    test('Save Request -> Verify it writes to SharedPreferences', () async {
+    test('should persist request to SharedPreferences', () async {
       const json = '{"path": "/test"}';
       await storage.saveRequest(json);
       
@@ -21,19 +21,20 @@ void main() {
       expect(queue, contains(json));
     });
 
-    test('Queue Cap -> Save 205 requests. Verify length is exactly 200', () async {
+    test('should cap queue to 200 items and drop oldest (FIFO)', () async {
       for (int i = 0; i < 205; i++) {
         await storage.saveRequest('{"id": $i}');
       }
       
       final queue = await storage.getQueue();
       expect(queue.length, 200);
-      // Verify FIFO: oldest (0-4) are dropped, 5 is the first
+      
+      // The first 5 requests should have been dropped.
       expect(queue.first, '{"id": 5}');
       expect(queue.last, '{"id": 204}');
     });
 
-    test('FIFO Order -> Verify first in is first out', () async {
+    test('should maintain strict first-in-first-out order', () async {
       await storage.saveRequest('{"id": 1}');
       await storage.saveRequest('{"id": 2}');
       

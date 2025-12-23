@@ -4,21 +4,15 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'offline_storage.dart';
 
-/// **QueueInterceptor** is the safety net that catches requests when the internet is gone.
-///
-/// It intercepts connectivity errors and instead of letting the app crash or show 
-/// an error screen, it saves the request metadata to [OfflineStorage].
+/// Interceptor that captures and queues failed mutation requests while the device is offline.
 class QueueInterceptor extends Interceptor {
-  /// Creates a [QueueInterceptor].
+  /// Initializes the interceptor with persistent storage and optional connectivity monitor.
   QueueInterceptor({
     required this.storage,
     Connectivity? connectivity,
   }) : connectivity = connectivity ?? Connectivity();
 
-  /// The vault where pending requests are saved.
   final OfflineStorage storage;
-  
-  /// Helper to check if the device reports "No Internet".
   final Connectivity connectivity;
 
   @override
@@ -26,16 +20,16 @@ class QueueInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    // 1. Detect if the failure is actually due to lack of internet
+    // Check if the error is connectivity-related.
     final connectivityResult = await connectivity.checkConnectivity();
     final isNoInternet = connectivityResult.contains(ConnectivityResult.none) || 
                          err.error is SocketException;
 
-    // 2. Filter: We only queue JSON-serializable requests, NOT file uploads (FormData).
-    // File uploads often involve temporary paths that won't exist upon app restart.
+    // Filter: only queue simple mutations. Files (FormData) are skipped 
+    // because their temporary paths might not exist when replaying.
     if (isNoInternet && err.requestOptions.data is! FormData) {
       
-      // 3. Serialize: Map the metadata needed to recreate the request later.
+      // Serialize minimum metadata needed to recreate the request.
       final requestMap = {
         'path': err.requestOptions.path,
         'method': err.requestOptions.method,
@@ -45,12 +39,10 @@ class QueueInterceptor extends Interceptor {
       };
 
       try {
-        // 4. Convert to string and save to SharedPreferences
         final jsonString = jsonEncode(requestMap);
         await storage.saveRequest(jsonString);
 
-        // 5. Resolve: Return a fake "Success" response with status 499.
-        // This tells the UI: "The system has taken care of this request offline."
+        // Resolve with status 499 to signal to the UI that the request was queued.
         return handler.resolve(
           Response<dynamic>(
             requestOptions: err.requestOptions,
@@ -59,11 +51,10 @@ class QueueInterceptor extends Interceptor {
           ),
         );
       } catch (_) {
-        // If serialization fails (e.g., non-JSON data), we let the error pass through.
+        // Fallback to original error if serialization fails.
       }
     }
 
-    // 6. If internet is present or request is not queueable, proceed with the error.
     return super.onError(err, handler);
   }
 }

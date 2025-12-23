@@ -33,8 +33,8 @@ void main() {
       syncManager = SyncManager(client, storage: storage);
     });
 
-    test('Full Loop: Offline -> Request Queue -> Online -> Sync', () async {
-      // 1. Simulate Offline State via SocketException
+    test('Full sync loop: capture offline request and replay once back online', () async {
+      // 1. Force a connection error to trigger queuing.
       when(() => mockDio.request<dynamic>(
             any(),
             data: any(named: 'data'),
@@ -47,14 +47,14 @@ void main() {
         type: DioExceptionType.connectionError,
       ));
 
-      // 2. Call request()
+      // 2. Attempt a mutation request.
       final result = await client.request<dynamic>(
         path: '/post',
         method: HttpMethod.post,
         data: {'title': 'hello'},
       );
 
-      // 3. Verify it returns Status 499 and item is stored
+      // 3. Confirm it was intercepted and queued (status 499).
       expect(result, isA<Failure<dynamic>>());
       expect((result as Failure<dynamic>).statusCode, 499);
       
@@ -62,7 +62,7 @@ void main() {
       expect(queue.length, 1);
       expect(queue.first, contains('/post'));
 
-      // 4. Mock Success for Replay
+      // 4. Mock server recovery for the replay attempt.
       when(() => mockDio.request<dynamic>(
             any(),
             data: any(named: 'data'),
@@ -75,10 +75,10 @@ void main() {
             data: {'id': 1},
           ));
 
-      // 5. Trigger Sync
+      // 5. Run the synchronization process.
       await syncManager.startSync();
 
-      // 6. Verify storage is empty after sync
+      // 6. Confirm the queue is flushed.
       final finalQueue = await storage.getQueue();
       expect(finalQueue.isEmpty, true);
     });

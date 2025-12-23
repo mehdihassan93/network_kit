@@ -1,16 +1,11 @@
 import 'package:dio/dio.dart';
 
-/// **AuthInterceptor** is responsible for injecting authentication headers into every request.
-///
-/// It follows a **pull-based** strategy: every time a request is about to be sent,
-/// it calls the provided [getToken] function to fetch the latest token. This 
-/// ensures that we always use the most current token available (e.g., from secure storage).
+/// Interceptor that adds an Authorization header to every request.
 class AuthInterceptor extends Interceptor {
-  /// Creates an [AuthInterceptor] with a required [getToken] provider.
+  /// Requires a [getToken] callback to pull the latest token (e.g., from secure storage).
   AuthInterceptor({required this.getToken});
 
-  /// A callback function that returns the current authentication token.
-  /// If it returns `null` or an empty string, no header will be added.
+  /// Function to fetch the current token.
   final Future<String?> Function() getToken;
 
   @override
@@ -18,15 +13,14 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // 1. Fetch the token from the provider
+    // Pull the latest token before sending the request.
     final token = await getToken();
     
-    // 2. Inject it into the Authorization header if present
+    // Add Bearer token if available.
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
     
-    // 3. Continue the request chain
     return handler.next(options);
   }
 }

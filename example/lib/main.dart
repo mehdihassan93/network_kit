@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:network_kit/network_kit.dart';
 
@@ -7,12 +6,8 @@ void main() async {
   runApp(const MyApp());
 }
 
-/// **MyApp** is the entry point for the Network Kit demonstration.
-///
-/// It showcases the "Magic Trick" of offline queuing and automatic synchronization
-/// using a simple log-based UI.
+/// A demonstration app for the Network Kit.
 class MyApp extends StatefulWidget {
-  /// Creates the [MyApp] widget.
   const MyApp({super.key});
 
   @override
@@ -20,13 +15,12 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // 1. Initialize the Client
+  // Initialize the client with offline storage.
   final _client = NetworkClient(
     baseUrl: 'https://jsonplaceholder.typicode.com',
     storage: OfflineStorage(),
   );
 
-  // 2. The Sync Manager
   late SyncManager _syncManager;
   final List<String> _logs = [];
 
@@ -37,10 +31,9 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _initSync() {
-    // Initialize SyncManager.
     _syncManager = SyncManager(_client);
     
-    // Start listening to connectivity changes to auto-replay queue
+    // Auto-sync when the internet connection is restored.
     _syncManager.startMonitoring(); 
     _addLog("✅ System Initialized. Sync Manager Active.");
   }
@@ -48,13 +41,13 @@ class _MyAppState extends State<MyApp> {
   Future<void> _fetchPost() async {
     _addLog("⏳ Requesting Post #1...");
 
-    // 3. Make the Request
+    // Execute the network request.
     final result = await _client.request<Map<dynamic, dynamic>>(
       path: '/posts/1',
       method: HttpMethod.get,
     );
 
-    // 4. Handle the Result (Dart 3 Pattern Matching)
+    // Handle results using Dart 3 pattern matching.
     switch (result) {
       case Success<Map<dynamic, dynamic>>(data: final data):
         _addLog("🟢 SUCCESS: ${data['title']}");

@@ -5,7 +5,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:network_kit/network_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Mock classes
 class MockNetworkClient extends Mock implements NetworkClient {}
 
 void main() {
@@ -23,19 +22,18 @@ void main() {
       syncManager = SyncManager(mockClient, storage: storage);
     });
 
-    test('Memory Stress: 1,000 Requests Queuing', () async {
+    test('Stress Test: Queuing 1,000 requests', () async {
       final watch = Stopwatch()..start();
       
-      // Payload: ~500 bytes per request
-      final largePayload = {
+      final payload = {
         'id': 'test-uuid-001',
-        'data': 'A' * 400, // 400 chars
+        'data': 'A' * 400,
         'timestamp': DateTime.now().toIso8601String(),
       };
       final jsonPayload = jsonEncode({
         'path': '/api/test',
         'method': 'post',
-        'data': largePayload,
+        'data': payload,
       });
 
       print('--- Memory Stress Test ---');
@@ -47,44 +45,40 @@ void main() {
       watch.stop();
 
       print('Time to queue 1,000 requests: ${watch.elapsedMilliseconds}ms');
-      print('Queue size in memory: ${queue.length} items');
+      print('Final queue size: ${queue.length}');
       
-      // Since we updated OfflineStorage to cap at 200, the result should be 200
+      // confirm the 200-item cap is working
       expect(queue.length, 200);
     });
 
-    test('CPU Stress: Large JSON Parsing (5MB)', () async {
+    test('Stress Test: Parsing large JSON (5MB)', () async {
       print('\n--- CPU Stress Test ---');
-      // Create a 5MB JSON String
-      final bigStringBuffer = StringBuffer('{ "data": [');
+      final buffer = StringBuffer('{ "data": [');
       for (int i = 0; i < 50000; i++) {
-        bigStringBuffer.write('{ "id": $i, "value": "some test data representing a large response" }');
-        if (i < 49999) bigStringBuffer.write(',');
+        buffer.write('{ "id": $i, "value": "some test data" }');
+        if (i < 49999) buffer.write(',');
       }
-      bigStringBuffer.write('] }');
-      final rawJson = bigStringBuffer.toString();
+      buffer.write('] }');
+      final rawJson = buffer.toString();
       
-      print('Generated 5MB JSON string. Size: ${rawJson.length / (1024 * 1024)} MB');
+      print('Payload size: ${rawJson.length / (1024 * 1024)} MB');
 
       final watch = Stopwatch()..start();
-      // Simulating what happens inside NetworkClient or decoding
       final decoded = jsonDecode(rawJson);
       watch.stop();
 
-      print('Decoding time (Main Thread): ${watch.elapsedMilliseconds}ms');
+      print('Main thread decoding time: ${watch.elapsedMilliseconds}ms');
       
-      // If decoding takes more than 16ms, it will drop a frame in a real Flutter app.
       if (watch.elapsedMilliseconds > 16) {
-        print('⚠️ WARNING: 5MB JSON decoding took > 16ms. This will block the UI thread.');
+        print('⚠️ Warning: Large JSON decode blocks UI thread (> 16ms).');
       }
       
       expect(decoded, isA<Map<dynamic, dynamic>>());
     });
 
-    test('Throughput: Syncing 1,000 Requests (O(n2) Risk)', () async {
+    test('Throughput Test: Syncing capped queue', () async {
       print('\n--- Throughput Stress Test ---');
       
-      // Pre-fill storage with 1,000 requests (it will cap at 200)
       final jsonPayload = jsonEncode({
         'path': '/api/test',
         'method': 'post',
@@ -94,7 +88,6 @@ void main() {
         await storage.saveRequest(jsonPayload);
       }
 
-      // Mock Success for all replays
       when(() => mockClient.request<dynamic>(
         path: any<String>(named: 'path'),
         method: any<HttpMethod>(named: 'method'),
@@ -106,14 +99,14 @@ void main() {
       await syncManager.startSync();
       watch.stop();
 
-      print('Total Sync time for 200 items (capped): ${watch.elapsedMilliseconds}ms');
-      print('Average time per item: ${watch.elapsedMilliseconds / 200}ms');
+      print('Sync time for 200 items: ${watch.elapsedMilliseconds}ms');
+      print('Avg time per item: ${watch.elapsedMilliseconds / 200}ms');
       
       final queue = await storage.getQueue();
       expect(queue.length, 0);
 
       if (watch.elapsedMilliseconds > 1000) {
-        print('⚠️ CRITICAL PERF RISK: Sync is O(n2). Re-writing disk for every item is too slow.');
+        print('⚠️ Warning: Sync performance is degrading.');
       }
     });
   });
