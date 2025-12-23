@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -40,7 +42,7 @@ void main() {
       // 1. Mock the adapter to throw a network error.
       // This triggers the real Dio pipeline, which calls QueueInterceptor.
       when(() => mockAdapter.fetch(any(), any(), any()))
-          .thenThrow(SocketException('No Internet'));
+          .thenThrow(const SocketException('No Internet'));
 
       // 2. Attempt a mutation request.
       final result = await client.request<dynamic>(
