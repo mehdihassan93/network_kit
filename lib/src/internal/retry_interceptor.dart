@@ -49,7 +49,7 @@ class RetryInterceptor extends Interceptor {
       final delay = delays[delayIndex];
 
       // 5. Wait...
-      await Future.delayed(Duration(milliseconds: delay));
+      await Future<void>.delayed(Duration(milliseconds: delay));
 
       try {
         // 6. Re-execute the request

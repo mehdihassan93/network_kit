@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:network_kit/network_kit.dart';
@@ -96,10 +95,10 @@ void main() {
 
       // Mock Success for all replays
       when(() => mockClient.request<dynamic>(
-        path: any(named: 'path'),
-        method: any(named: 'method'),
-        data: any(named: 'data'),
-        queryParameters: any(named: 'queryParameters'),
+        path: any<String>(named: 'path'),
+        method: any<HttpMethod>(named: 'method'),
+        data: any<dynamic>(named: 'data'),
+        queryParameters: any<Map<String, dynamic>?>(named: 'queryParameters'),
       )).thenAnswer((_) async => const Success<dynamic>({'status': 'ok'}));
 
       final watch = Stopwatch()..start();
