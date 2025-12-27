@@ -107,9 +107,6 @@ class NetworkClient {
 /// typically used to offload parsing to a background isolate.
 class IsolatedTransformer extends SyncTransformer {
   @override
-  late final dynamic Function(String) jsonDecodeCallback;
-
-  @override
   Future<dynamic> transformResponse(
     RequestOptions options,
     ResponseBody responseBody,
