@@ -106,7 +106,7 @@ class NetworkClient {
 /// A Dio transformer that allows for custom JSON decoding, 
 /// typically used to offload parsing to a background isolate.
 class IsolatedTransformer extends SyncTransformer {
-  /// The callback used to decode JSON strings.
+  @override
   late final dynamic Function(String) jsonDecodeCallback;
 
   @override
