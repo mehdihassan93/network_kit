@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import '../models/network_result.dart';
 import 'exception_handler.dart';
 import '../internal/auth_interceptor.dart';
