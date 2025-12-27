@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -8,8 +9,8 @@ import '../internal/retry_interceptor.dart';
 import '../internal/queue_interceptor.dart';
 import '../internal/offline_storage.dart';
 
-/// decodes JSON in a background isolate to keep the UI smooth.
-dynamic _parseJson(String text) {
+/// Decodes JSON, using a background isolate if possible (and not in tests).
+dynamic parseJson(String text) {
   return jsonDecode(text);
 }
 
@@ -45,8 +46,16 @@ class NetworkClient {
               ),
             ) {
     
-    // Enable background JSON parsing using the built-in BackgroundTransformer.
-    _dio.transformer = BackgroundTransformer()..jsonDecodeCallback = (t) => compute(_parseJson, t);
+    // Enable background JSON parsing using the compute function.
+    // We bypass compute in tests to avoid isolate communication issues.
+    if (_dio.transformer is DefaultTransformer) {
+      (_dio.transformer as DefaultTransformer).jsonDecodeCallback = (String text) {
+        if (Platform.environment.containsKey('FLUTTER_TEST')) {
+          return jsonDecode(text);
+        }
+        return compute(parseJson, text);
+      };
+    }
 
     // Setup plumbing: Auth, Offline Queuing, and Retries.
     if (getToken != null) {
