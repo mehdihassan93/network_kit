@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0
+
+- **FEATURE**: Implemented `BackgroundTransformer` using Flutter's `compute` function for isolated JSON parsing.
+- **FIX**: Resolved race conditions in `SyncManager` using concurrency locks (`_isSyncing`).
+- **FIX**: Hardened offline re-execution by stripping conflicting auto-generated headers (e.g., `content-length`).
+- **FIX**: Resolved "Ambiguous Import" and CI isolate communication issues by streamlining transformer logic.
+- **ENHANCEMENT**: Revamped example app with a modern, glassmorphic premium UI.
+- **ENHANCEMENT**: Added `topics` to `pubspec.yaml` for better discoverability.
+- **ENHANCEMENT**: Documented custom status code `499` for client-side offline vaulting.
+
 ## 0.0.1
 
 - **Initial Release**: A robust, production-ready networking engine for Flutter.
