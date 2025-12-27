@@ -85,6 +85,13 @@ class NetworkClient {
 
       final responseData = response.data;
 
+      if (response.statusCode == 499) {
+        return Failure<T>(
+          (responseData as Map?)?['message'] as String? ?? 'Request queued offline',
+          statusCode: 499,
+        );
+      }
+
       if (responseData == null) {
         return Failure<T>('Response data was null');
       }
@@ -93,5 +100,26 @@ class NetworkClient {
     } catch (e) {
       return ExceptionHandler.handleException<T>(e);
     }
+  }
+}
+
+/// A Dio transformer that allows for custom JSON decoding, 
+/// typically used to offload parsing to a background isolate.
+class BackgroundTransformer extends DefaultTransformer {
+  /// The callback used to decode JSON strings.
+  late final dynamic Function(String) jsonDecodeCallback;
+
+  @override
+  Future<dynamic> transformResponse(
+    RequestOptions options,
+    ResponseBody responseBody,
+  ) async {
+    // If the response is JSON, use the custom decoder callback.
+    final contentType = responseBody.headers[Headers.contentTypeHeader]?.first ?? '';
+    if (contentType.contains(Headers.jsonContentType)) {
+      final String rawString = await super.transformResponse(options, responseBody) as String;
+      return jsonDecodeCallback(rawString);
+    }
+    return super.transformResponse(options, responseBody);
   }
 }

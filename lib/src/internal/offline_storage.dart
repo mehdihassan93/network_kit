@@ -34,9 +34,20 @@ class OfflineStorage {
   }
 
   /// Fetches the current list of serialized requests.
+  /// Returns an empty list if storage is corrupted or empty.
   Future<List<String>> getQueue() async {
-    final prefs = await _instance;
-    return prefs.getStringList(_queueKey) ?? [];
+    try {
+      final prefs = await _instance;
+      final queue = prefs.getStringList(_queueKey);
+      if (queue == null) return [];
+      
+      // Basic validation: ensure each item is at least a non-empty string.
+      return queue.where((item) => item.isNotEmpty).toList();
+    } catch (_) {
+      // In case of drastic corruption, clear and return empty.
+      await clearQueue();
+      return [];
+    }
   }
 
   /// Deletes a specific request from the persistent store.

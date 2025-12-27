@@ -1,9 +1,16 @@
 name: network_kit
 description: A high-performance, resilient networking engine for Flutter. Features background JSON parsing, automated offline queuing, and order-preserving synchronization.
-version: 0.0.1
+version: 0.1.0
 homepage: https://github.com/mehdihassan93/network_kit
 repository: https://github.com/mehdihassan93/network_kit
 issue_tracker: https://github.com/mehdihassan93/network_kit/issues
+author: Mehdi Hassan <mehdihassan93@gmail.com>
+topics:
+  - networking
+  - dio
+  - offline
+  - sync
+  - json-parsing
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

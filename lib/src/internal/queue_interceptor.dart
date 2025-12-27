@@ -29,7 +29,8 @@ class QueueInterceptor extends Interceptor {
 
     // Filter: only queue simple mutations. Files (FormData) are skipped 
     // because their temporary paths might not exist when replaying.
-    if (isNoInternet && err.requestOptions.data is! FormData) {
+    final skipQueue = err.requestOptions.extra['skipQueue'] == true;
+    if (!skipQueue && isNoInternet && err.requestOptions.data is! FormData) {
       
       // Serialize minimum metadata needed to recreate the request.
       final requestMap = {

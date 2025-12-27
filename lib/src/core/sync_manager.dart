@@ -17,6 +17,7 @@ class SyncManager {
   final OfflineStorage storage;
 
   StreamSubscription<List<ConnectivityResult>>? _subscription;
+  bool _isSyncing = false;
 
   /// Listens for connectivity changes and triggers a sync when back online.
   void startMonitoring() {
@@ -38,8 +39,12 @@ class SyncManager {
   /// Processes the offline queue sequentially to maintain request order.
   /// Uses a batch-saving strategy to minimize disk I/O while keeping data safe.
   Future<void> startSync() async {
-    final queue = await storage.getQueue();
-    if (queue.isEmpty) return;
+    if (_isSyncing) return;
+    _isSyncing = true;
+
+    try {
+      final queue = await storage.getQueue();
+      if (queue.isEmpty) return;
 
     final memoryQueue = List<String>.from(queue);
     int processedCount = 0;
@@ -54,6 +59,10 @@ class SyncManager {
           method: _parseMethod(requestMap['method'] as String),
           data: requestMap['data'],
           queryParameters: (requestMap['queryParameters'] as Map?)?.cast<String, dynamic>(),
+          options: Options(
+            headers: (requestMap['headers'] as Map?)?.cast<String, dynamic>(),
+            extra: {'skipQueue': true},
+          ),
         );
 
         if (result is Success<dynamic>) {
@@ -76,6 +85,9 @@ class SyncManager {
 
     // Final persistent save of the remaining queue state.
     await storage.saveQueue(memoryQueue);
+    } finally {
+      _isSyncing = false;
+    }
   }
 
   /// Helpers to convert string method names back to enums.

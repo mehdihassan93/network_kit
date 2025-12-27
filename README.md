@@ -45,7 +45,7 @@ We built this package in three defensive layers, visualized below:
 ### 1. Installation
 ```yaml
 dependencies:
-  network_kit: ^0.0.1
+  network_kit: ^0.1.0
 ```
 
 ### 2. Zero-Config Setup

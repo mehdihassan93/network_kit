@@ -21,6 +21,8 @@ class Failure<T> extends NetworkResult<T> {
   /// The descriptive error message.
   final String message;
 
-  /// The HTTP status code if available (e.g., 404, 500, or 499 for offline).
+  /// The HTTP status code if available (e.g., 404, 500).
+  /// Note: Status code 499 is used as a custom convention indicating the 
+  /// request was captured and queued for offline replay.
   final int? statusCode;
 }
