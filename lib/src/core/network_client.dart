@@ -1,10 +1,17 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../models/network_result.dart';
 import 'exception_handler.dart';
 import '../internal/auth_interceptor.dart';
 import '../internal/retry_interceptor.dart';
 import '../internal/queue_interceptor.dart';
 import '../internal/offline_storage.dart';
+
+/// decodes JSON in a background isolate to keep the UI smooth.
+dynamic _parseJson(String text) {
+  return jsonDecode(text);
+}
 
 /// HTTP methods supported by the client.
 enum HttpMethod {
@@ -39,7 +46,7 @@ class NetworkClient {
             ) {
     
     // Enable background JSON parsing using the built-in BackgroundTransformer.
-    _dio.transformer = BackgroundTransformer();
+    _dio.transformer = BackgroundTransformer()..jsonDecodeCallback = (t) => compute(_parseJson, t);
 
     // Setup plumbing: Auth, Offline Queuing, and Retries.
     if (getToken != null) {
