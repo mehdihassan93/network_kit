@@ -46,10 +46,13 @@ class NetworkClient {
               ),
             ) {
     
-    // Enable background JSON parsing using the compute function.
+    // Set the transformer to BackgroundTransformer to avoid deprecation warnings
+    // and enable background JSON parsing.
+    _dio.transformer = BackgroundTransformer();
+
     // We bypass compute in tests to avoid isolate communication issues.
-    if (_dio.transformer is DefaultTransformer) {
-      (_dio.transformer as DefaultTransformer).jsonDecodeCallback = (String text) {
+    if (_dio.transformer is BackgroundTransformer) {
+      (_dio.transformer as BackgroundTransformer).jsonDecodeCallback = (String text) {
         if (Platform.environment.containsKey('FLUTTER_TEST')) {
           return jsonDecode(text);
         }
