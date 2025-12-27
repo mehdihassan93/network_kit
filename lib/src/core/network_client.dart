@@ -8,11 +8,6 @@ import '../internal/retry_interceptor.dart';
 import '../internal/queue_interceptor.dart';
 import '../internal/offline_storage.dart';
 
-/// decodes JSON in a background isolate to keep the UI smooth.
-dynamic _parseJson(String text) {
-  return jsonDecode(text);
-}
-
 /// HTTP methods supported by the client.
 enum HttpMethod {
   /// HTTP GET request.
@@ -45,8 +40,8 @@ class NetworkClient {
               ),
             ) {
     
-    // Enable background JSON parsing using the compute function.
-    _dio.transformer = IsolatedTransformer()..jsonDecodeCallback = (t) => compute(_parseJson, t);
+    // Enable background JSON parsing using the built-in BackgroundTransformer.
+    _dio.transformer = BackgroundTransformer();
 
     // Setup plumbing: Auth, Offline Queuing, and Retries.
     if (getToken != null) {
@@ -100,29 +95,5 @@ class NetworkClient {
     } catch (e) {
       return ExceptionHandler.handleException<T>(e);
     }
-  }
-}
-
-/// A Dio transformer that allows for custom JSON decoding, 
-/// typically used to offload parsing to a background isolate.
-class IsolatedTransformer extends SyncTransformer {
-  @override
-  Future<dynamic> transformResponse(
-    RequestOptions options,
-    ResponseBody responseBody,
-  ) async {
-    // If the response is JSON, use the custom decoder callback.
-    final contentType = responseBody.headers[Headers.contentTypeHeader]?.first ?? '';
-    if (contentType.contains(Headers.jsonContentType)) {
-      // Force plain text to get the raw string for offloaded decoding.
-      final copyOptions = options.copyWith(responseType: ResponseType.plain);
-      final dynamic rawData = await super.transformResponse(copyOptions, responseBody);
-      
-      if (rawData is String) {
-        return jsonDecodeCallback(rawData);
-      }
-      return rawData;
-    }
-    return super.transformResponse(options, responseBody);
   }
 }
