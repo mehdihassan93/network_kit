@@ -7,8 +7,9 @@ void main() async {
   runApp(const MyApp());
 }
 
-/// A premium demonstration app for the Network Kit.
+/// The root widget of the demonstration application.
 class MyApp extends StatelessWidget {
+  /// Creates the root [MyApp] widget.
   const MyApp({super.key});
 
   @override
@@ -25,7 +26,6 @@ class MyApp extends StatelessWidget {
           primary: const Color(0xFF6366F1),
           secondary: const Color(0xFFEC4899),
           surface: const Color(0xFF0F172A),
-          background: const Color(0xFF020617),
         ),
       ),
       home: const NetworkKitDemo(),
@@ -33,7 +33,9 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// The main demonstration screen for Network Kit features.
 class NetworkKitDemo extends StatefulWidget {
+  /// Creates the [NetworkKitDemo] widget.
   const NetworkKitDemo({super.key});
 
   @override
@@ -113,7 +115,7 @@ class _NetworkKitDemoState extends State<NetworkKitDemo> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF6366F1).withOpacity(0.15),
+                color: const Color(0xFF6366F1).withValues(alpha: 0.15),
               ),
             ),
           ),
@@ -144,9 +146,9 @@ class _NetworkKitDemoState extends State<NetworkKitDemo> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withOpacity(0.1),
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.3)),
+                  border: Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.3)),
                 ),
                 child: const Icon(Icons.bolt, color: Color(0xFF6366F1)),
               ),
@@ -165,7 +167,7 @@ class _NetworkKitDemoState extends State<NetworkKitDemo> {
           Text(
             'High-Resiliency Networking Engine',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
               fontSize: 16,
             ),
           ),
@@ -217,9 +219,9 @@ class _NetworkKitDemoState extends State<NetworkKitDemo> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -232,7 +234,7 @@ class _NetworkKitDemoState extends State<NetworkKitDemo> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.1),
+                    color: accentColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, size: 20, color: accentColor),
@@ -253,7 +255,7 @@ class _NetworkKitDemoState extends State<NetworkKitDemo> {
                       Text(
                         '${log.timestamp.hour}:${log.timestamp.minute.toString().padLeft(2, '0')}:${log.timestamp.second.toString().padLeft(2, '0')}',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                           fontSize: 12,
                         ),
                       ),
@@ -276,7 +278,7 @@ class _NetworkKitDemoState extends State<NetworkKitDemo> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF6366F1).withOpacity(0.3),
+              color: const Color(0xFF6366F1).withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -313,16 +315,31 @@ class _NetworkKitDemoState extends State<NetworkKitDemo> {
   }
 }
 
-enum LogType { info, success, warning, error }
+/// Categorizes the type of network log entry.
+enum LogType { 
+  /// INFORMATIONAL log entry.
+  info, 
+  /// Success log entry.
+  success, 
+  /// Warning/Offline log entry.
+  warning, 
+  /// Error log entry.
+  error 
+}
 
+/// Represents a single logged network event.
 class NetworkLog {
-  final String message;
-  final DateTime timestamp;
-  final LogType type;
-
+  /// Creates a [NetworkLog] entry.
   NetworkLog({
     required this.message,
     required this.timestamp,
     required this.type,
   });
+
+  /// The descriptive message of the event.
+  final String message;
+  /// When the event occurred.
+  final DateTime timestamp;
+  /// The severity/type of the event.
+  final LogType type;
 }

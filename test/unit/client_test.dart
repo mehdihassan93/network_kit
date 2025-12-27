@@ -16,7 +16,7 @@ void main() {
     setUp(() {
       mockDio = MockDio();
       // mock the transformer and interceptors for the constructor
-      when(() => mockDio.transformer).thenReturn(BackgroundTransformer());
+      when(() => mockDio.transformer).thenReturn(IsolatedTransformer());
       when(() => mockDio.interceptors).thenReturn(Interceptors());
       
       client = NetworkClient(

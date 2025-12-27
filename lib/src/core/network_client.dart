@@ -46,7 +46,7 @@ class NetworkClient {
             ) {
     
     // Enable background JSON parsing using the compute function.
-    _dio.transformer = BackgroundTransformer()..jsonDecodeCallback = (t) => compute(_parseJson, t);
+    _dio.transformer = IsolatedTransformer()..jsonDecodeCallback = (t) => compute(_parseJson, t);
 
     // Setup plumbing: Auth, Offline Queuing, and Retries.
     if (getToken != null) {
@@ -105,7 +105,7 @@ class NetworkClient {
 
 /// A Dio transformer that allows for custom JSON decoding, 
 /// typically used to offload parsing to a background isolate.
-class BackgroundTransformer extends DefaultTransformer {
+class IsolatedTransformer extends SyncTransformer {
   /// The callback used to decode JSON strings.
   late final dynamic Function(String) jsonDecodeCallback;
 

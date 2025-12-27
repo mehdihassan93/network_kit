@@ -4,7 +4,6 @@ version: 0.1.0
 homepage: https://github.com/mehdihassan93/network_kit
 repository: https://github.com/mehdihassan93/network_kit
 issue_tracker: https://github.com/mehdihassan93/network_kit/issues
-author: Mehdi Hassan <mehdihassan93@gmail.com>
 topics:
   - networking
   - dio

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dio/dio.dart';
 import 'network_client.dart';
 import '../internal/offline_storage.dart';
 import '../models/network_result.dart';
