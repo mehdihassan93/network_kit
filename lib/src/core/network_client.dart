@@ -114,8 +114,14 @@ class IsolatedTransformer extends SyncTransformer {
     // If the response is JSON, use the custom decoder callback.
     final contentType = responseBody.headers[Headers.contentTypeHeader]?.first ?? '';
     if (contentType.contains(Headers.jsonContentType)) {
-      final String rawString = await super.transformResponse(options, responseBody) as String;
-      return jsonDecodeCallback(rawString);
+      // Force plain text to get the raw string for offloaded decoding.
+      final copyOptions = options.copyWith(responseType: ResponseType.plain);
+      final dynamic rawData = await super.transformResponse(copyOptions, responseBody);
+      
+      if (rawData is String) {
+        return jsonDecodeCallback(rawData);
+      }
+      return rawData;
     }
     return super.transformResponse(options, responseBody);
   }
