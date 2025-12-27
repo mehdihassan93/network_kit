@@ -66,7 +66,7 @@ class SyncManager {
           ),
         );
 
-        if (result is Success<dynamic>) {
+        if (result is Success) {
           memoryQueue.remove(jsonRequest);
           processedCount++;
 
@@ -76,6 +76,8 @@ class SyncManager {
           }
         } else {
           // If we're still offline or the server fails, stop to preserve order.
+          // Note: Logic errors (4xx) should technically be handled or skipped, 
+          // but for now we stop to be safe.
           break;
         }
       } catch (_) {

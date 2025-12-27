@@ -33,12 +33,17 @@ class QueueInterceptor extends Interceptor {
     if (!skipQueue && isNoInternet && err.requestOptions.data is! FormData) {
       
       // Serialize minimum metadata needed to recreate the request.
+      final headers = Map<String, dynamic>.from(err.requestOptions.headers);
+      // Remove headers that Dio or the server might auto-generate/conflict with.
+      headers.remove(HttpHeaders.contentLengthHeader);
+      headers.remove(HttpHeaders.hostHeader);
+
       final requestMap = {
         'path': err.requestOptions.path,
         'method': err.requestOptions.method,
         'data': err.requestOptions.data,
         'queryParameters': err.requestOptions.queryParameters,
-        'headers': err.requestOptions.headers,
+        'headers': headers,
       };
 
       try {

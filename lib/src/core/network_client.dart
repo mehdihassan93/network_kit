@@ -44,23 +44,19 @@ class NetworkClient {
                 connectTimeout: const Duration(seconds: 30),
                 receiveTimeout: const Duration(seconds: 30),
               ),
-            ) {
-    
-    // Set the transformer to BackgroundTransformer to avoid deprecation warnings
-    // and enable background JSON parsing.
-    _dio.transformer = BackgroundTransformer();
+    // Initialize transformer with a resilient decoding strategy.
+    final transformer = BackgroundTransformer();
+    transformer.jsonDecodeCallback = (String text) {
+      // Bypassing compute in tests and debug mode prevents isolate failures in CI.
+      final isTest = Platform.environment.containsKey('FLUTTER_TEST');
+      if (isTest || kDebugMode) {
+        return jsonDecode(text);
+      }
+      return compute(parseJson, text);
+    };
+    _dio.transformer = transformer;
 
-    // We bypass compute in tests to avoid isolate communication issues.
-    if (_dio.transformer is BackgroundTransformer) {
-      (_dio.transformer as BackgroundTransformer).jsonDecodeCallback = (String text) {
-        if (Platform.environment.containsKey('FLUTTER_TEST')) {
-          return jsonDecode(text);
-        }
-        return compute(parseJson, text);
-      };
-    }
-
-    // Setup plumbing: Auth, Offline Queuing, and Retries.
+    // Setup plumbing: Auth must come BEFORE Queueing to capture tokens.
     if (getToken != null) {
       _dio.interceptors.add(AuthInterceptor(getToken: getToken));
     }
